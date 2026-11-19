@@ -108,11 +108,11 @@ Common grouped cohorts/label choices -> paired contrasts and leakage checks. Dep
 
 ## 14 provenance and verification
 
-Original: `YOAD_CORE/src/models/freeze.py`; `YOAD_CORE/src/models/persist.py`; `YOAD_CORE/src/common/run_provenance.py`.
+Original: `YOAD_CORE/src/models/freeze.py`; `YOAD_CORE/src/models/persist.py`; `YOAD_CORE/src/benchmark/runner.py`.
 
-yoad.models.freeze/persist and yoad.common.run_provenance: manifest checksums, tamper checks and software/config/run identity.
+yoad.models.freeze/persist and yoad.benchmark.runner: manifest checksums, tamper checks and synthetic software/config/run identity.
 
-Model/config metadata -> hashes/manifests; private writer remains private. Dependencies: Python standard library numpy pandas scikit-learn. Tests: test_freeze_and_leakage; test_frozen_pipeline. Historical original freeze manifests excluded; no independent clinical/adjudication proof. Installed-package provenance helper uses historical relative root logic; do not rely on it for release Git identity.
+Model/config metadata -> hashes/manifests; historical private writers excluded. Dependencies: Python standard library numpy pandas scikit-learn. Tests: test_freeze_and_leakage; test_frozen_pipeline. Historical original freeze manifests and private run-provenance writer excluded; no independent clinical/adjudication proof.
 
 ## 15 visualization
 
