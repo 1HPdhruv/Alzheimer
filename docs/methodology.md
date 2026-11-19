@@ -1,0 +1,11 @@
+# Methodology and implementation boundaries
+
+1. Map raw diagnosis, examination date and visit code fields explicitly. The NACC mapping requires delivered-dictionary verification; missing codes must not become real measurements.
+2. Define eligible MCI prediction anchors and a calendar horizon. Three-state labeling keeps indeterminate outcomes separate; competing death, conflicts and late ascertainment have explicit policies. Compare the reference visit-code rule as a distinct target, not the same label under another name.
+3. Construct pre-anchor predictors using actual instrument dates. For the temporal library, streams contain only observations on or before the anchor, with masks, elapsed times and within-modality gaps. Training-fold preprocessing decides active features and retained MRI values. The snapshot library also contains historical windows allowing post-anchor measurements; strict windows are required for prospective claims.
+4. Keep participants together across partitions. Fit imputation, scaling, filtering, tuning, threshold selection and calibration inside the appropriate training/validation partition. Early/late fusion and neural candidates must be compared on matched targets and populations.
+5. The earlier primary candidate was penalised logistic regression, with XGBoost as comparator. Later snapshot/temporal modules contain broader model registries, LSTM, Transformer and gated fusion candidates. Implementation does not establish superiority or a selected clinical model.
+6. Report discrimination (AUROC, average precision), probabilistic accuracy (Brier/log loss), calibration (intercept/slope, O:E), threshold metrics and failure cases. Participant-cluster prediction bootstrap and full-pipeline refitting bootstrap answer different uncertainty questions.
+7. Preserve config/seeds/code identities and distinguish reused internal held-out evaluation from fresh independent validation. Version changes; never silently reinterpret a historical freeze.
+
+Public components accept in-memory frames with required columns, or the synthetic benchmark config. Dataset loader helpers require explicit paths, with no bundled datasets. The supplied cohort/features/experiments YAML files are explanatory contracts, not a new real-data runner. Existing executable benchmark YAML files are separate and validated by their CLI.

@@ -1,0 +1,51 @@
+# Pass A/B screening campaign on SYNTHETIC data only (software validation; numbers carry no meaning about AD).
+# Run from YOAD-Research/:  .venv-data/bin/python -m src.benchmark.campaign configs/benchmark/synthetic_screening_campaign.yaml
+# The same file structure will be used for an approved real-data adapter later; only `dataset` would change.
+campaign_id: synthetic_screening_campaign
+description: "Broad Pass A screen (model families, sampling, imputation, selection, modality ablation, late fusion) + Pass B."
+seed: 20261017
+dataset:
+  adapter: synthetic
+  params: {n_participants: 400, visits_per_participant: [1, 4], positive_fraction: 0.3, missing_rate: 0.1, seed: 7}
+locked_test_fraction: 0.25
+screening: {n_splits: 5}
+selection: {metric: log_loss, top_k: 3, reference: lr_l2_all}     # declared before any run
+bootstrap: {B: 300}
+metrics: [roc_auc, average_precision, brier, log_loss, calibration_intercept, calibration_slope,
+          balanced_accuracy, sensitivity, specificity]
+base:
+  preprocessing: {numeric_imputation: median_with_indicator, scaling: standard}
+  model: {id: logistic_l2, search_space: {C: [0.01, 0.1, 1.0]}, search_metric: log_loss}
+  validation: {inner_cv_splits: 3}
+candidates:
+  - {name: dummy_prior,          overrides: {model: {id: dummy_prior, search_space: {}}}}
+  - {name: lr_l2_all}
+  - {name: lr_l1_all,            overrides: {model: {id: logistic_l1, search_space: {C: [0.05, 0.5, 5.0]}}}}
+  - {name: lr_enet_all,          overrides: {model: {id: logistic_elasticnet, search_space: {C: [0.1, 1.0], l1_ratio: [0.2, 0.8]}}}}
+  - {name: lda_all,              overrides: {model: {id: lda, search_space: {}}}}
+  - {name: qda_all,              overrides: {model: {id: qda, search_space: {reg_param: [0.3, 0.7]}}}}
+  - {name: nb_all,               overrides: {model: {id: gaussian_nb, search_space: {}}}}
+  - {name: linear_svm_all,       overrides: {model: {id: linear_svm, search_space: {C: [0.01, 0.1, 1.0]}, search_metric: roc_auc},
+                                             validation: {validation_fraction: 0.2}, calibration: {method: sigmoid}}}
+  - {name: svm_rbf_all,          overrides: {model: {id: svm_rbf, search_space: {C: [0.5, 2.0], gamma: [scale]}, search_metric: roc_auc},
+                                             validation: {validation_fraction: 0.2}, calibration: {method: sigmoid}}}
+  - {name: rf_all,               overrides: {model: {id: random_forest, search_space: {min_samples_leaf: [5, 20]}, params: {n_estimators: 200}}}}
+  - {name: et_all,               overrides: {model: {id: extra_trees, search_space: {min_samples_leaf: [5, 20]}, params: {n_estimators: 200}}}}
+  - {name: hgb_all,              overrides: {model: {id: hist_gb, search_space: {learning_rate: [0.03, 0.1]}, params: {max_depth: 3}}}}
+  - {name: xgb_all,              overrides: {model: {id: xgboost, search_space: {max_depth: [2, 4]}, params: {n_estimators: 200}}}}
+  - {name: mlp_all,              overrides: {model: {id: mlp, search_space: {alpha: [0.001, 0.1]}}}}
+  - {name: lr_l2_classweight,    overrides: {sampling: {method: class_weight}}}
+  - {name: lr_l2_oversample,     overrides: {sampling: {method: random_oversample}}}
+  - {name: xgb_oversample,       overrides: {model: {id: xgboost, search_space: {max_depth: [2, 4]}, params: {n_estimators: 200}},
+                                             sampling: {method: random_oversample}}}
+  - {name: lr_l2_knn_impute,     overrides: {preprocessing: {numeric_imputation: knn}}}
+  - {name: lr_l2_iter_impute,    overrides: {preprocessing: {numeric_imputation: iterative}}}
+  - {name: lr_l2_anova8,         overrides: {feature_selection: {method: anova, k: 8}}}
+  - {name: lr_l2_pca90,          overrides: {feature_selection: {method: pca, n_components: 0.9}}}
+  - {name: lr_l2_l1select,       overrides: {feature_selection: {method: l1, l1_C: 0.1}}}
+  - {name: lr_l2_cognitive,      overrides: {features: {groups: [cognitive]}}}
+  - {name: lr_l2_demographic,    overrides: {features: {groups: [demographic]}}}
+  - {name: lr_l2_imaging,        overrides: {features: {groups: [imaging]}}}
+  - {name: lr_l2_cog_dem,        overrides: {features: {groups: [cognitive, demographic]}}}
+  - {name: lr_l2_late_fusion,    overrides: {fusion: {type: late, inner_cv_splits: 3}, model: {search_space: {}, params: {C: 1.0}}}}
+output: {root: results/benchmark}

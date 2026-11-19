@@ -1,0 +1,32 @@
+# Stage 1 synthetic smoke test. SYNTHETIC DATA ONLY - not a clinical experiment; numbers carry no meaning about AD.
+# Run from YOAD-Research/:  .venv-data/bin/python -m src.benchmark.runner configs/benchmark/synthetic_smoke_test.yaml
+experiment_id: synthetic_smoke_test
+description: "End-to-end check of the benchmark framework on the deterministic synthetic generator."
+task: binary_classification
+seed: 20261017
+dataset:
+  adapter: synthetic
+  params: {n_participants: 300, visits_per_participant: [1, 4], positive_fraction: 0.3, missing_rate: 0.1, seed: 7}
+features:
+  groups: [demographic, cognitive, imaging]      # early fusion of all three hypothetical modalities
+preprocessing:
+  numeric_imputation: median_with_indicator
+  scaling: standard
+  low_variance_threshold: 0.0
+  correlation_threshold: null
+feature_selection: {method: anova, k: 8}
+sampling: {method: none}
+model:
+  id: logistic_l2
+  search_space: {C: [0.01, 0.1, 1.0]}
+  search_metric: log_loss
+validation:
+  outer: {type: group_holdout, test_fraction: 0.25}
+  validation_fraction: 0.2
+  inner_cv_splits: 3
+  stratify: true
+calibration: {method: none}
+threshold: {method: youden, value: 0.5}
+metrics: [roc_auc, average_precision, brier, log_loss, calibration_intercept, calibration_slope,
+          balanced_accuracy, sensitivity, specificity, f1_macro]
+output: {root: results/benchmark}

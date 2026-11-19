@@ -1,0 +1,11 @@
+# Documentation contract only; no participant-level runner consumes this file.
+status: pending_approved_reproduction
+source: ADNI
+target: NACC
+pool_cohorts: false
+anchor_diagnosis: MCI
+horizon_calendar_months: 24
+indeterminate_as_negative: false
+paths:
+  source_data: null  # investigator supplies an approved external path
+  target_data: null

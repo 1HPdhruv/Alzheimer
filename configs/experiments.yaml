@@ -1,0 +1,6 @@
+# Documentation contract only; configs/benchmark/*.yaml are executable synthetic configs.
+release_seed: 20261017
+scientific_results_verified: false
+participant_execution: researcher_only_in_approved_environment
+comparisons: [penalised_logistic, xgboost, snapshot_multimodal, temporal_multimodal]
+pending: [independent_prediction_verification, clinical_timing_review, instrument_exclusions, history_summary_comparator, fresh_validation]

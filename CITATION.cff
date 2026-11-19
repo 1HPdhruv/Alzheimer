@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "Cite this software release with its commit SHA; it does not establish verified scientific findings."
+title: "YOAD research software: 24-month dementia progression in MCI"
+type: software
+version: 0.1.0
+repository-code: "https://github.com/1HPdhruv/Alzheimer"
+url: "https://github.com/1HPdhruv/Alzheimer"
+authors:
+  - name: "1HPdhruv"
