@@ -1,0 +1,24 @@
+file_id,bytes,decision,reason
+F000207,125351069,EXCLUDE,Contained eligibility uncertain; original preserved
+F003304,25336780,EXCLUDE,No public disclosure approval established for this specific output
+F003316,10793803,EXCLUDE,No public disclosure approval established for this specific output
+F003520,14137333,EXCLUDE,No public disclosure approval established for this specific output
+F003523,14137333,EXCLUDE,No public disclosure approval established for this specific output
+F003524,14137333,EXCLUDE,No public disclosure approval established for this specific output
+F003525,11970605,EXCLUDE,No public disclosure approval established for this specific output
+F003527,14137333,EXCLUDE,No public disclosure approval established for this specific output
+F003529,14137333,EXCLUDE,No public disclosure approval established for this specific output
+F004000,10852955,EXCLUDE,No public disclosure approval established for this specific output
+F004041,64976113,EXCLUDE,Participant-level or derived artifact risk; no redistribution
+F006600,25336780,EXCLUDE,No public disclosure approval established for this specific output
+F006612,10793803,EXCLUDE,No public disclosure approval established for this specific output
+F007320,11729213,EXCLUDE,Participant-level or derived artifact risk; no redistribution
+F007606,14137333,EXCLUDE,Participant-level or derived artifact risk; no redistribution
+F007608,14258952,EXCLUDE,Participant-level or derived artifact risk; no redistribution
+F007611,14258952,EXCLUDE,Participant-level or derived artifact risk; no redistribution
+F007616,14258952,EXCLUDE,Participant-level or derived artifact risk; no redistribution
+F007618,14258952,EXCLUDE,Participant-level or derived artifact risk; no redistribution
+F008344,13632248,EXCLUDE,Regenerate dependencies; nested Git history not imported
+F008360,33387952,EXCLUDE,Regenerate dependencies; nested Git history not imported
+F009959,35272344,EXCLUDE,Regenerate dependencies; nested Git history not imported
+F009964,43626992,EXCLUDE,Regenerate dependencies; nested Git history not imported

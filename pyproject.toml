@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yoad-research"
+version = "0.1.0"
+description = "Auditable research software for 24-month MCI dementia progression"
+requires-python = ">=3.11,<3.12"
+readme = "README.md"
+license = {file = "LICENSE"}
+dependencies = ["numpy==1.26.4", "pandas==2.2.1", "scipy==1.17.1", "scikit-learn==1.4.1.post1", "PyYAML==6.0.3", "xgboost==3.2.0", "imbalanced-learn==0.12.4", "matplotlib==3.10.9"]
+
+[project.optional-dependencies]
+test = ["pytest==8.1.1"]
+longitudinal = ["torch==2.11.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["yoad*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--import-mode=importlib"

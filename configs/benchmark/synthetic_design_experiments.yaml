@@ -1,0 +1,51 @@
+# Pre-specified synthetic design experiments (2026-10-17). SYNTHETIC ONLY: every parameter is a hypothetical modelling
+# choice (see investigation_2026-10-15/synthetic/design_sim.py, LONG_DEFAULTS and its header); none is estimated from
+# ADNI or NACC, and no result says anything about real event frequencies or real performance.
+# Run: .venv-data/bin/python investigation_2026-10-15/synthetic/run_design_experiments.py configs/benchmark/synthetic_design_experiments.yaml
+experiment_id: synthetic_design_experiments
+seed: 20261017
+n_jobs: 6                      # bounded concurrency on a 10-core machine
+
+main:                          # controlled 2 x 2: training-label rule x training-anchor strategy
+  repetitions: 100             # fixed after the pilot (see SYNTHETIC_VALIDATION_REPORT.md section 6)
+  pilot_repetitions: 3
+  n_participants: 600
+  train_fraction: 0.6          # participant-level split, stratified on baseline truth; same split for all 4 configs
+  bootstrap_B: 200             # participant-level paired bootstrap per repetition
+  models:                      # fixed specifications; no tuning on any evaluation data
+    logistic_l2: {C: 1.0}
+    xgboost: {n_estimators: 200, max_depth: 2, learning_rate: 0.05}
+  reference_config: A3         # calendar reference labels + baseline-only training
+  scenarios:                   # primary 4 + 2 pre-specified sensitivity settings (S5/S6 can reverse effect directions)
+    S1_well_specified:     {drop_rate: 0.005, p_miss: 0.05, jitter_sd: 0.5}
+    S2_label_ambiguity:    {mean_lag: 6.0, p_cn: 0.05, p_unc: 0.03, p_revert: 0.15, drop_rate: 0.02, p_miss: 0.15, jitter_sd: 1.5}
+    S3_repeated_visits:    {sd_re: 1.2, sd_noise: 0.3, p_miss: 0.35, enrol_span: 72.0, jitter_sd: 1.0}
+    S4_informative_dropout: {drop_rate: 0.02, eta_drop: 1.0}
+    S5_annual_schedule:    {interval: 12.0, jitter_sd: 1.5, mean_lag: 3.0, drop_rate: 0.01}
+    S6_reverse_informative_dropout: {drop_rate: 0.02, eta_drop: -1.0}
+
+coverage:                      # separate study of bootstrap-interval coverage on FIXED predictions and labels
+  repetitions: 400             # chosen for MC SE of coverage ~1.1 percentage points at 95% nominal (see report)
+  pilot_repetitions: 20
+  n_participants: 150
+  bootstrap_B: 500
+  nominal: 0.95
+  reference_participants: 100000   # independent large sample defining the population (visit-weighted) quantity
+  intercept: -1.0
+  sd_e: 1.0                    # visit-level SD on the logit scale (visits differ within a participant)
+  metrics: [roc_auc, brier, log_oe]
+  settings:                    # sd_u / sd_u_unobs = observed / UNOBSERVED participant random-effect SD (logit scale);
+                               # visits per participant ~ U{m_min..m_max}. Pilot finding: with no unobserved effect the
+                               # residuals are independent and clustering cannot matter for calibration-type metrics.
+    C1_independent_visits:  {sd_u: 0.0, sd_u_unobs: 0.0, m_min: 1, m_max: 11}
+    C2_low_correlation:     {sd_u: 0.5, sd_u_unobs: 0.5, m_min: 1, m_max: 5}
+    C3_high_correlation:    {sd_u: 1.5, sd_u_unobs: 1.5, m_min: 1, m_max: 5}
+    C4_high_corr_unequal:   {sd_u: 1.5, sd_u_unobs: 1.5, m_min: 1, m_max: 11}
+
+full_bootstrap_validation:     # added 2026-10-17 (Prompt 4): checks src/benchmark/design_bootstrap.py on fresh datasets
+  scenarios: [S1_well_specified, S2_label_ambiguity]
+  repetitions: 60              # independent of the main experiment (seed offset below)
+  seed_offset: 500000
+  bootstrap_B: 150
+  model: {logistic_l2: {C: 1.0}}
+  reference_run: 20261017T130121Z   # its 100-repetition mean contrast is the reference value (independent seeds)

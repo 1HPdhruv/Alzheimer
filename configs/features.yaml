@@ -1,0 +1,6 @@
+# Documentation contract; inspect implementation-specific feature lists before use.
+status: requires_protocol_and_dictionary_review
+prospective_post_anchor_days: 0
+earlier_core: [age, female, education_years, mmse, adas13, faq, apoe4]
+diagnosis_linked_review: [mmse, adas13, faq, cdrsb, cdglobal, adas11]
+onset_age_from_enrollment_age: false
