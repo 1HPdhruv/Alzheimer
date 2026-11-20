@@ -1,0 +1,7 @@
+# Literature and reference scope
+
+The local implementation identifies Simkhada et al., GeroScience, DOI [10.1007/s11357-026-02551-x](https://doi.org/10.1007/s11357-026-02551-x), as the motivating baseline. The original source records reference repository commit `c67358dbb0960b41c2b1fd775114d000bae13081` and states the local protocol implementation was reimplemented rather than copied because no license was available. This release vendors no reference repository files or datasets.
+
+The recorded distinctions include visit-code versus calendar outcomes, same-visit versus dated measurements, sample versus participant bootstrap units, and a bounded adapted search versus the published search. Those distinctions prevent calling an adapted comparison an exact reproduction. Historical performance annotations are withheld; protocol constants are retained as the implemented specification, not newly verified project findings.
+
+This publication audit attempted to retrieve the DOI page, but retrieval failed; bibliographic details and article claims were not independently revalidated online. No article performance number is used in the README. Consult the primary paper and supplements directly before citing its quantitative results. The workspace also discusses Liu, Choe, outcome robustness and onset-defined transport; these are search leads, not a new verified bibliography. Papers, PDFs, reference code and generated literature tables are withheld until redistribution and claim checks are complete.

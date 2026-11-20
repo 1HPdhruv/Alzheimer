@@ -1,6 +1,8 @@
 """Publication boundary checks; file review is still required."""
 from __future__ import annotations
 import argparse
+import csv
+import io
 import json
 from pathlib import Path
 import re
@@ -16,11 +18,74 @@ PRIVATE_PATH = re.compile(r'(?:/' + r'Users/|/' + r'home/)[^\s/]+')
 IDENTIFIER = re.compile(r'\b(?:\d{3}_S_\d{4,6}|NACC\d{4,})\b')
 SYNTHETIC_ID_FILES = {'tests/synthetic_baseline.py', 'tests/test_baseline_library.py'}
 
+
+# Exact reviewed organization paths; no unrestricted submission directory is allowed.
+SUBMISSION_PUBLIC_FILES = frozenset({
+    'YOAD_SUBMISSION/01_LITERATURE_REVIEW/Literature_Review/HISTORICAL_REVIEW_REGISTER.md',
+    'YOAD_SUBMISSION/01_LITERATURE_REVIEW/Literature_Review/Literature_Scope.md',
+    'YOAD_SUBMISSION/01_LITERATURE_REVIEW/Literature_Review/README.md',
+    'YOAD_SUBMISSION/01_LITERATURE_REVIEW/README.md',
+    'YOAD_SUBMISSION/01_LITERATURE_REVIEW/Research_Gap/README.md',
+    'YOAD_SUBMISSION/01_LITERATURE_REVIEW/Research_Gap/Research_Gap.md',
+    'YOAD_SUBMISSION/01_LITERATURE_REVIEW/Research_Methodology/Methodology.md',
+    'YOAD_SUBMISSION/01_LITERATURE_REVIEW/Research_Methodology/README.md',
+    'YOAD_SUBMISSION/01_LITERATURE_REVIEW/Research_Question_and_Hypotheses/Hypotheses.md',
+    'YOAD_SUBMISSION/01_LITERATURE_REVIEW/Research_Question_and_Hypotheses/README.md',
+    'YOAD_SUBMISSION/01_LITERATURE_REVIEW/Research_Question_and_Hypotheses/Research_Overview.md',
+    'YOAD_SUBMISSION/02_EXPERIMENTATION/Dataset_and_Cohort_Audit/Data_Governance.md',
+    'YOAD_SUBMISSION/02_EXPERIMENTATION/Dataset_and_Cohort_Audit/README.md',
+    'YOAD_SUBMISSION/02_EXPERIMENTATION/Execution_Logs/Experiment_Status.md',
+    'YOAD_SUBMISSION/02_EXPERIMENTATION/Execution_Logs/README.md',
+    'YOAD_SUBMISSION/02_EXPERIMENTATION/Execution_Logs/Synthetic_Test_Evidence.md',
+    'YOAD_SUBMISSION/02_EXPERIMENTATION/Experiment_Configurations/README.md',
+    'YOAD_SUBMISSION/02_EXPERIMENTATION/Model_Implementations/README.md',
+    'YOAD_SUBMISSION/02_EXPERIMENTATION/README.md',
+    'YOAD_SUBMISSION/02_EXPERIMENTATION/Source_Code/README.md',
+    'YOAD_SUBMISSION/02_EXPERIMENTATION/Source_Code/Reproducibility.md',
+    'YOAD_SUBMISSION/03_ANALYSIS/Calibration_Analysis/README.md',
+    'YOAD_SUBMISSION/03_ANALYSIS/Figures/README.md',
+    'YOAD_SUBMISSION/03_ANALYSIS/Model_Comparisons/README.md',
+    'YOAD_SUBMISSION/03_ANALYSIS/README.md',
+    'YOAD_SUBMISSION/03_ANALYSIS/Result_Tables/Experiment_Summary.md',
+    'YOAD_SUBMISSION/03_ANALYSIS/Result_Tables/README.md',
+    'YOAD_SUBMISSION/03_ANALYSIS/Result_Tables/RESULT_PROVENANCE_REGISTER.md',
+    'YOAD_SUBMISSION/03_ANALYSIS/Robustness_Analysis/README.md',
+    'YOAD_SUBMISSION/03_ANALYSIS/Statistical_Analysis/README.md',
+    'YOAD_SUBMISSION/04_PAPER_DRAFT/Architecture_Diagrams/README.md',
+    'YOAD_SUBMISSION/04_PAPER_DRAFT/Figures/README.md',
+    'YOAD_SUBMISSION/04_PAPER_DRAFT/Manuscript/README.md',
+    'YOAD_SUBMISSION/04_PAPER_DRAFT/Manuscript/VERSION_REGISTER.md',
+    'YOAD_SUBMISSION/04_PAPER_DRAFT/README.md',
+    'YOAD_SUBMISSION/04_PAPER_DRAFT/References/README.md',
+    'YOAD_SUBMISSION/04_PAPER_DRAFT/Supplementary_Material/Limitations.md',
+    'YOAD_SUBMISSION/04_PAPER_DRAFT/Supplementary_Material/README.md',
+    'YOAD_SUBMISSION/05_SUBMISSION/Author_Declarations/README.md',
+    'YOAD_SUBMISSION/05_SUBMISSION/Cover_Letter/README.md',
+    'YOAD_SUBMISSION/05_SUBMISSION/Final_Manuscript/README.md',
+    'YOAD_SUBMISSION/05_SUBMISSION/README.md',
+    'YOAD_SUBMISSION/05_SUBMISSION/Submission_Confirmation/README.md',
+    'YOAD_SUBMISSION/05_SUBMISSION/Supplementary_Files/README.md',
+    'YOAD_SUBMISSION/06_ACCEPTANCE/Acceptance_Letter/README.md',
+    'YOAD_SUBMISSION/06_ACCEPTANCE/Camera_Ready_Paper/README.md',
+    'YOAD_SUBMISSION/06_ACCEPTANCE/Copyright_Forms/README.md',
+    'YOAD_SUBMISSION/06_ACCEPTANCE/Publication_DOI/README.md',
+    'YOAD_SUBMISSION/06_ACCEPTANCE/README.md',
+    'YOAD_SUBMISSION/06_ACCEPTANCE/Reviewer_Comments/README.md',
+    'YOAD_SUBMISSION/06_ACCEPTANCE/Reviewer_Responses/README.md',
+    'YOAD_SUBMISSION/FILE_INVENTORY.csv',
+    'YOAD_SUBMISSION/FOLDER_TREE.md',
+    'YOAD_SUBMISSION/README.md',
+    'YOAD_SUBMISSION/SUBMISSION_MASTER_TRACKER.md',
+    'YOAD_SUBMISSION/VALIDATION_REPORT.md',
+})
+SUBMISSION_INVENTORY = "YOAD_SUBMISSION/FILE_INVENTORY.csv"
+SUBMISSION_COLUMNS = ["file_name", "original_path", "destination_path", "milestone", "file_type", "version_status", "scientific_evidence_status", "redistribution_status", "action_taken", "notes"]
+
 def inspect_bytes(name: str, data: bytes) -> list[str]:
     p = Path(name); problems = []
     if p.is_absolute() or '..' in p.parts:
         return ['unsafe relative path']
-    if (len(p.parts) == 1 and name not in ALLOWED_TOP) or (len(p.parts) > 1 and p.parts[0] not in ALLOWED_ROOTS):
+    if ((len(p.parts) == 1 and name not in ALLOWED_TOP) or (len(p.parts) > 1 and p.parts[0] not in ALLOWED_ROOTS)) and name not in SUBMISSION_PUBLIC_FILES:
         problems.append('outside release allowlist')
     parts = list(p.parts)
     if parts[:3] == ['src', 'yoad', 'data']:
@@ -29,7 +94,7 @@ def inspect_bytes(name: str, data: bytes) -> list[str]:
         problems.append('restricted directory')
     if p.suffix not in {'.py', '.md', '.yaml', '.toml', '.txt', '.cff', '.csv', ''} and name != '.gitignore':
         problems.append('unapproved file type')
-    if p.suffix == '.csv' and (p.parts[0] != 'AUDIT' or p.name not in ALLOWED_CSV):
+    if p.suffix == '.csv' and (p.parts[0] != 'AUDIT' or p.name not in ALLOWED_CSV) and name != SUBMISSION_INVENTORY:
         problems.append('unapproved table')
     if len(data) > 5 * 1024 * 1024:
         problems.append('over 5 MiB release limit')
@@ -37,6 +102,12 @@ def inspect_bytes(name: str, data: bytes) -> list[str]:
         text = data.decode('utf-8')
     except UnicodeDecodeError:
         return problems + ['binary/non-UTF-8 content']
+    if name == SUBMISSION_INVENTORY:
+        rows = csv.DictReader(io.StringIO(text))
+        if rows.fieldnames != SUBMISSION_COLUMNS:
+            problems.append('invalid submission inventory schema')
+        elif any(None in row or None in row.values() for row in rows):
+            problems.append('malformed submission inventory row')
     if any(re.search(pattern, text) for pattern in SECRETS):
         problems.append('potential credential')
     if PRIVATE_PATH.search(text):
